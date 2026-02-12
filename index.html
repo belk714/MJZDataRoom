@@ -100,6 +100,8 @@ td.pct{color:#4a9eff}
 .leaflet-popup-content .pop-field{color:#8bb4e0;font-size:12px}
 .leaflet-popup-content .pop-detail{color:#7a8a9e;font-size:12px;margin-top:4px}
 .leaflet-popup-content .pop-pct{color:#4a9eff;font-size:12px;font-weight:600;margin-top:2px}
+.leaflet-popup-content a{text-decoration:none}
+.leaflet-popup-content a:hover{text-decoration:underline}
 
 @media(max-width:768px){
   .header h1{font-size:20px}
@@ -654,19 +656,19 @@ const eng=[
 // Map marker data with types and states
 const mapData={
   fields:[
-    {lat:35.65,lng:-99.75,name:'W. Cheyenne Field',loc:'Roger Mills Co., OK',state:'OK',type:'wi',
+    {lat:35.65,lng:-99.75,name:'W. Cheyenne Field',loc:'Roger Mills Co., OK',state:'OK',type:'wi',key:'cheyenne',
      detail:'21 wells | WI 0.13–0.52% | Active Upland Energy drilling program',pct:'Avg WI: ~0.45%'},
-    {lat:35.55,lng:-99.60,name:'Dempsey-Mantooth Field',loc:'Roger Mills Co., OK',state:'OK',type:'wi',
+    {lat:35.55,lng:-99.60,name:'Dempsey-Mantooth Field',loc:'Roger Mills Co., OK',state:'OK',type:'wi',key:'dempsey',
      detail:'5 wells | WI + ORRI positions | Harrison & Louthan wells',pct:'WI up to 0.74%'},
-    {lat:35.28,lng:-97.82,name:'Tuttle Field',loc:'Grady Co., OK',state:'OK',type:'wi',
+    {lat:35.28,lng:-97.82,name:'Tuttle Field',loc:'Grady Co., OK',state:'OK',type:'wi',key:'tuttle',
      detail:'4 wells | Braum, Jackson, Skaggs | Sec. 24 (10N 6W)',pct:'WI up to 100% (Braum 24-1)'},
-    {lat:32.65,lng:-94.95,name:'Glenwood Field',loc:'Upshur Co., TX',state:'TX',type:'wi',
+    {lat:32.65,lng:-94.95,name:'Glenwood Field',loc:'Upshur Co., TX',state:'TX',type:'wi',key:'glenwood',
      detail:'30 wells | Largest position | Brawley, Nicholson, S. Brawley GUs',pct:'WI up to 16.22%'},
-    {lat:32.70,lng:-94.90,name:'Longview N. Field',loc:'Upshur Co., TX',state:'TX',type:'orri',
+    {lat:32.70,lng:-94.90,name:'Longview N. Field',loc:'Upshur Co., TX',state:'TX',type:'orri',key:'longview',
      detail:'1 well | Lancaster Maurine GU 1',pct:'ORRI: 0.594%'},
-    {lat:32.75,lng:-101.95,name:'Deroan Field',loc:'Dawson Co., TX',state:'TX',type:'orri',
+    {lat:32.75,lng:-101.95,name:'Deroan Field',loc:'Dawson Co., TX',state:'TX',type:'orri',key:'deroan',
      detail:'12 wells | Dugger, Love, Stricklin, Nowell',pct:'ORRI: 0.58–3.0%'},
-    {lat:32.65,lng:-102.00,name:'Patricia Field',loc:'Dawson Co., TX',state:'TX',type:'orri',
+    {lat:32.65,lng:-102.00,name:'Patricia Field',loc:'Dawson Co., TX',state:'TX',type:'orri',key:'patricia',
      detail:'1 well | Harris E W et al 13',pct:'ORRI: 1.0625%'},
   ],
   minerals:[
@@ -838,6 +840,100 @@ function mkIcon(color){
   return L.divIcon({className:'',html:`<div style="width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`,iconSize:[14,14],iconAnchor:[7,7]});
 }
 
+// Helper: navigate to a tab
+function goTab(tab){
+  document.querySelectorAll('.nav a').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const a=document.querySelector(`.nav a[data-tab="${tab}"]`);
+  if(a)a.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// Helper: get field economics summary
+function fieldEconSummary(fieldKey){
+  const fieldMap={'cheyenne':'Cheyenne','dempsey':'Dempsey-Mantooth','tuttle':'Tuttle','glenwood':'Glenwood','deroan':'Deroan','patricia':'Patricia','longview':'Longview N.'};
+  const fname=fieldMap[fieldKey]||'';
+  const fw=econ.filter(e=>e.field===fname);
+  if(!fw.length) return '';
+  const totalPV10=fw.reduce((s,w)=>s+w.pv10,0);
+  const totalND=fw.reduce((s,w)=>s+w.nd,0);
+  const totalOil=fw.reduce((s,w)=>s+w.oil,0);
+  const totalGas=fw.reduce((s,w)=>s+w.gas,0);
+  let html='<div style="margin-top:6px;padding-top:6px;border-top:1px solid #2a3a4a;font-size:11px">';
+  html+=`<div style="color:#50c878;font-weight:700">PV10: $${totalPV10.toFixed(1)}K</div>`;
+  html+=`<div style="color:#7a8a9e">Undisc CF: $${totalND.toFixed(1)}K</div>`;
+  if(totalOil>0) html+=`<div style="color:#7a8a9e">Net Oil: ${totalOil.toFixed(2)} Mbbl</div>`;
+  if(totalGas>0) html+=`<div style="color:#7a8a9e">Net Gas: ${totalGas.toFixed(2)} MMcf</div>`;
+  html+='</div>';
+  return html;
+}
+
+// Helper: get well-level popup for fields
+function fieldWellList(fieldKey){
+  const fw=wells.filter(w=>w.key===fieldKey);
+  if(!fw.length) return '';
+  const wiCount=fw.filter(w=>w.wi>0).length;
+  const orriCount=fw.filter(w=>w.orri>0).length;
+  // Top operators from eng data
+  const fieldNames=fw.map(w=>w.name);
+  const ops=new Set();
+  eng.filter(e=>fieldNames.some(fn=>e.name.replace(/[- ]/g,'').toLowerCase().includes(fn.replace(/[- ]/g,'').toLowerCase()))).forEach(e=>{if(e.op!=='—')ops.add(e.op)});
+  // Reservoirs
+  const reservoirs=new Set();
+  eng.filter(e=>fieldNames.some(fn=>e.name.replace(/[- ]/g,'').toLowerCase().includes(fn.replace(/[- ]/g,'').toLowerCase()))).forEach(e=>{if(e.res!=='—')reservoirs.add(e.res)});
+
+  let html='<div style="margin-top:4px;font-size:11px;color:#7a8a9e">';
+  html+=`${fw.length} wells`;
+  if(wiCount) html+=` · ${wiCount} WI`;
+  if(orriCount) html+=` · ${orriCount} ORRI`;
+  if(ops.size) html+=`<div>Op: ${[...ops].join(', ')}</div>`;
+  if(reservoirs.size) html+=`<div>Res: ${[...reservoirs].join(', ')}</div>`;
+  html+='</div>';
+  return html;
+}
+
+// Build rich popup for field markers
+function buildFieldPopup(d){
+  const fieldKey=d.key||'';
+  let html=`<strong>${d.name}</strong><div class="pop-field">${d.loc}</div>`;
+  html+=fieldWellList(fieldKey);
+  html+=fieldEconSummary(fieldKey);
+  // Navigation links
+  html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
+  if(d.type==='wi') html+=`<a href="#" onclick="goTab('working');return false" style="font-size:11px;color:#4a9eff">📋 Working Interests</a>`;
+  if(d.type==='orri') html+=`<a href="#" onclick="goTab('royalty');return false" style="font-size:11px;color:#4a9eff">📋 ORRI Detail</a>`;
+  html+=`<a href="#" onclick="goTab('economics');return false" style="font-size:11px;color:#50c878">💰 Economics</a>`;
+  html+=`<a href="#" onclick="goTab('activity');return false" style="font-size:11px;color:#e94560">🔴 Activity</a>`;
+  html+='</div>';
+  return html;
+}
+
+// Build rich popup for mineral markers
+function buildMineralPopup(d){
+  let html=`<strong style="color:#50c878">${d.name}</strong><div class="pop-field">${d.loc}</div>`;
+  html+=`<div class="pop-pct">${d.pct}</div>`;
+  html+=`<div class="pop-detail">${d.detail}</div>`;
+  html+=`<div style="margin-top:8px"><a href="#" onclick="goTab('minerals');return false" style="font-size:11px;color:#50c878">📄 Mineral Details</a></div>`;
+  return html;
+}
+
+// Build rich popup for activity markers
+function buildActivityPopup(d){
+  let html=`<strong style="color:#e94560">🔴 ${d.name}</strong><div class="pop-field">${d.loc}</div>`;
+  html+=`<div class="pop-detail">${d.detail}</div>`;
+  if(d.pct) html+=`<div class="pop-pct">${d.pct}</div>`;
+  // Check if this API matches any MJZP well
+  const apiMatch=d.detail.match(/API\s*([\d-]+)/);
+  if(apiMatch){
+    const api=apiMatch[1].replace(/-/g,'');
+    const fracUrl=`https://fracfocusdata.org/DisclosureSearch/SearchResults?apiNumber=${api}`;
+    html+=`<div style="margin-top:6px"><a href="${fracUrl}" target="_blank" style="font-size:11px;color:#4a9eff">🔗 FracFocus Disclosure</a></div>`;
+  }
+  html+=`<div style="margin-top:4px"><a href="#" onclick="goTab('activity');return false" style="font-size:11px;color:#e94560">📋 Full Activity Detail</a></div>`;
+  return html;
+}
+
 function initMap(){
   if(map)return;
   map=L.map('asset-map').setView([34.5,-99],5);
@@ -845,24 +941,37 @@ function initMap(){
     attribution:'©OpenStreetMap ©CARTO',maxZoom:18
   }).addTo(map);
 
-  // Add all markers
-  function addMarker(d,layerType){
+  // Field markers with rich popups
+  mapData.fields.forEach(f=>{
+    const layerType=f.type==='orri'?'orri':'wi';
     const color=typeColors[layerType];
-    const prefix=layerType==='activity'?'🔴 ':'';
-    const popup=`<strong>${prefix}${d.name}</strong><div class="pop-field">${d.loc}</div><div class="pop-detail">${d.detail}</div>${d.pct?'<div class="pop-pct">'+d.pct+'</div>':''}`;
-    const m=L.marker([d.lat,d.lng],{icon:mkIcon(color)}).bindPopup(popup);
+    const popup=buildFieldPopup(f);
+    const m=L.marker([f.lat,f.lng],{icon:mkIcon(color)}).bindPopup(popup,{maxWidth:300});
     m._mjzType=layerType;
-    m._mjzState=d.state;
+    m._mjzState=f.state;
     mapLayers[layerType].push(m);
     m.addTo(map);
-  }
-
-  mapData.fields.forEach(f=>{
-    const ltype=f.type==='orri'?'orri':'wi';
-    addMarker(f,ltype);
   });
-  mapData.minerals.forEach(m=>addMarker(m,'mineral'));
-  mapData.activity.forEach(a=>addMarker(a,'activity'));
+
+  // Mineral markers
+  mapData.minerals.forEach(d=>{
+    const popup=buildMineralPopup(d);
+    const m=L.marker([d.lat,d.lng],{icon:mkIcon(typeColors.mineral)}).bindPopup(popup,{maxWidth:300});
+    m._mjzType='mineral';
+    m._mjzState=d.state;
+    mapLayers.mineral.push(m);
+    m.addTo(map);
+  });
+
+  // Activity markers
+  mapData.activity.forEach(d=>{
+    const popup=buildActivityPopup(d);
+    const m=L.marker([d.lat,d.lng],{icon:mkIcon(typeColors.activity)}).bindPopup(popup,{maxWidth:320});
+    m._mjzType='activity';
+    m._mjzState=d.state;
+    mapLayers.activity.push(m);
+    m.addTo(map);
+  });
 
   // Fit bounds
   const allPts=[...mapData.fields,...mapData.minerals,...mapData.activity].map(p=>[p.lat,p.lng]);
