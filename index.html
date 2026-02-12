@@ -100,6 +100,17 @@ td.pct{color:#4a9eff}
 .leaflet-popup-content .pop-field{color:#8bb4e0;font-size:12px}
 .leaflet-popup-content .pop-detail{color:#7a8a9e;font-size:12px;margin-top:4px}
 .leaflet-popup-content .pop-pct{color:#4a9eff;font-size:12px;font-weight:600;margin-top:2px}
+tr.clickable{cursor:pointer;transition:background .15s}
+tr.clickable:hover td{background:#1a2332 !important}
+.interest-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.5px}
+.badge-wi{background:rgba(74,158,255,.15);color:#4a9eff;border:1px solid rgba(74,158,255,.3)}
+.badge-orri{background:rgba(232,197,71,.15);color:#e8c547;border:1px solid rgba(232,197,71,.3)}
+.badge-both{background:rgba(80,200,120,.15);color:#50c878;border:1px solid rgba(80,200,120,.3)}
+.modal-section{margin-bottom:20px}
+.modal-section h3{color:#8bb4e0;font-size:14px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e2a3a}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}
+.modal-grid .mg-label{color:#7a8a9e;font-size:11px;text-transform:uppercase}
+.modal-grid .mg-value{color:#e0e0e0;font-weight:600}
 .leaflet-popup-content a{text-decoration:none}
 .leaflet-popup-content a:hover{text-decoration:underline}
 
@@ -329,23 +340,34 @@ td.pct{color:#4a9eff}
   </div>
 
   <div class="card">
-    <h2>Well-Level Economics</h2>
-    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">All wells with reserve value. PV-PD = Proved Developed Producing, PV-SI = Proved Shut-In, PB-SI = Probable Shut-In. Wells with zero value across all categories are omitted.</p>
+    <h2>Complete Well Schedule</h2>
+    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Click any well for detailed single-well view. Interest types: <span style="color:#4a9eff">■</span> WI <span style="color:#e8c547">■</span> ORRI <span style="color:#50c878">■</span> Both</p>
+    <div class="field-filter" id="econ-filter">
+      <button class="field-btn active" data-field="all">All Fields</button>
+      <button class="field-btn" data-field="cheyenne">W. Cheyenne</button>
+      <button class="field-btn" data-field="dempsey">Dempsey-Mantooth</button>
+      <button class="field-btn" data-field="tuttle">Tuttle</button>
+      <button class="field-btn" data-field="glenwood">Glenwood</button>
+      <button class="field-btn" data-field="deroan">Deroan</button>
+      <button class="field-btn" data-field="patricia">Patricia</button>
+      <button class="field-btn" data-field="longview">Longview N.</button>
+    </div>
     <div class="table-wrap" style="max-height:600px;overflow-y:auto">
-      <table id="econ-table">
-        <tr><th>Well</th><th>Cat</th><th>Oil (Mbbl)</th><th>Gas (MMcf)</th><th>Oil Rev</th><th>Gas Rev</th><th>Exp+Tax</th><th>Non-Disc</th><th style="color:#50c878">PV10</th><th>Life</th></tr>
+      <table id="combined-table">
+        <tr><th>Well</th><th>Interest</th><th>Operator</th><th>Reservoir</th><th>Phase</th><th style="color:#50c878">PV10</th><th>Life</th></tr>
       </table>
     </div>
   </div>
+</div>
 
-  <div class="card">
-    <h2>Well Engineering Detail</h2>
-    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Operator, reservoir, and API data from TRC engineering reports.</p>
-    <div class="table-wrap" style="max-height:600px;overflow-y:auto">
-      <table id="eng-table">
-        <tr><th>Well</th><th>Operator</th><th>Reservoir</th><th>Phase</th><th>API #</th></tr>
-      </table>
+<!-- Well Detail Modal -->
+<div id="well-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;overflow-y:auto;padding:20px">
+  <div style="max-width:700px;margin:40px auto;background:#111827;border:1px solid #1e2a3a;border-radius:12px;padding:0;position:relative">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid #1e2a3a">
+      <h2 id="modal-title" style="color:#e8c547;font-size:18px;margin:0"></h2>
+      <button onclick="closeWellModal()" style="background:none;border:none;color:#7a8a9e;font-size:24px;cursor:pointer;padding:0 4px">&times;</button>
     </div>
+    <div id="modal-body" style="padding:24px"></div>
   </div>
 </div>
 
@@ -793,30 +815,53 @@ function buildTables(){
     orriT.appendChild(tr);
   });
 
-  // Economics table
-  const econT=document.getElementById('econ-table');
-  let econField='';
-  econ.forEach(w=>{
-    if(w.field!==econField){
-      econField=w.field;
+  // Combined well schedule table
+  const combT=document.getElementById('combined-table');
+  let combField='';
+  wells.forEach((w,i)=>{
+    if(w.field!==combField){
+      combField=w.field;
       const fr=document.createElement('tr');
       fr.className='field-header';
-      fr.innerHTML=`<td colspan="10">${w.field} Field</td>`;
-      econT.appendChild(fr);
+      fr.dataset.field=w.key;
+      fr.innerHTML=`<td colspan="7">${w.field} — ${w.loc}</td>`;
+      combT.appendChild(fr);
     }
+    // Interest type
+    const hasWI=w.wi>0||w.ri>0;
+    const hasORRI=w.orri>0;
+    let badge='';
+    if(hasWI&&hasORRI) badge='<span class="interest-badge badge-both">WI+ORRI</span>';
+    else if(hasWI) badge='<span class="interest-badge badge-wi">WI</span>';
+    else if(hasORRI) badge='<span class="interest-badge badge-orri">ORRI</span>';
+    else badge='<span style="color:#5a6a7e;font-size:11px">—</span>';
+    // Find eng data
+    const e=eng.find(x=>x.name===w.name)||{};
+    // Find econ data
+    const ec=econ.find(x=>x.name===w.name);
+    const pv10=ec&&ec.pv10>0?`<span style="color:#50c878">$${ec.pv10.toFixed(2)}K</span>`:'—';
+    const life=ec&&ec.life?ec.life.toFixed(1):'—';
+    const phaseColor=(e.phase||'')==='Gas'?'#4a9eff':'#50c878';
+
     const tr=document.createElement('tr');
-    const pv=w.pv10>0?`<span style="color:#50c878">$${w.pv10.toFixed(2)}K</span>`:'—';
-    tr.innerHTML=`<td>${w.name}</td><td style="font-size:11px;color:#7a8a9e">${w.cat}</td><td class="num">${w.oil||'—'}</td><td class="num">${w.gas||'—'}</td><td class="num">${w.oilRev?'$'+w.oilRev.toFixed(2)+'K':'—'}</td><td class="num">${w.gasRev?'$'+w.gasRev.toFixed(2)+'K':'—'}</td><td class="num">${w.exp?'$'+w.exp.toFixed(2)+'K':'—'}</td><td class="num">${w.nd?'$'+w.nd.toFixed(2)+'K':'—'}</td><td class="num">${pv}</td><td class="num">${w.life?w.life.toFixed(1):'—'}</td>`;
-    econT.appendChild(tr);
+    tr.className='clickable';
+    tr.dataset.field=w.key;
+    tr.dataset.wellIdx=i;
+    tr.onclick=()=>openWellModal(i);
+    tr.innerHTML=`<td>${w.name}</td><td>${badge}</td><td>${e.op||'—'}</td><td>${e.res||'—'}</td><td style="color:${phaseColor}">${e.phase||'—'}</td><td class="num">${pv10}</td><td class="num">${life}</td>`;
+    combT.appendChild(tr);
   });
 
-  // Engineering detail table
-  const engT=document.getElementById('eng-table');
-  eng.forEach(w=>{
-    const tr=document.createElement('tr');
-    const phaseColor=w.phase==='Gas'?'#4a9eff':'#50c878';
-    tr.innerHTML=`<td>${w.name}</td><td>${w.op}</td><td>${w.res}</td><td style="color:${phaseColor}">${w.phase}</td><td class="num">${w.api||'—'}</td>`;
-    engT.appendChild(tr);
+  // Field filters for combined table
+  document.querySelectorAll('#econ-filter .field-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#econ-filter .field-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const f=btn.dataset.field;
+      document.querySelectorAll('#combined-table tr[data-field]').forEach(tr=>{
+        tr.style.display=(f==='all'||tr.dataset.field===f)?'':'none';
+      });
+    });
   });
 
   document.querySelectorAll('#wi-filter .field-btn').forEach(btn=>{
@@ -830,6 +875,95 @@ function buildTables(){
     });
   });
 }
+
+// Well Detail Modal
+function openWellModal(idx){
+  const w=wells[idx];
+  const e=eng.find(x=>x.name===w.name)||{};
+  const ec=econ.find(x=>x.name===w.name);
+
+  document.getElementById('modal-title').textContent=w.name;
+
+  let html='';
+
+  // Overview section
+  html+='<div class="modal-section"><h3>Overview</h3><div class="modal-grid">';
+  html+=`<div><div class="mg-label">Field</div><div class="mg-value">${w.field}</div></div>`;
+  html+=`<div><div class="mg-label">Location</div><div class="mg-value">${w.loc}</div></div>`;
+  html+=`<div><div class="mg-label">Operator</div><div class="mg-value">${e.op||'—'}</div></div>`;
+  html+=`<div><div class="mg-label">Reservoir</div><div class="mg-value">${e.res||'—'}</div></div>`;
+  html+=`<div><div class="mg-label">Phase</div><div class="mg-value">${e.phase||'—'}</div></div>`;
+  if(e.api) html+=`<div><div class="mg-label">API #</div><div class="mg-value">${e.api}</div></div>`;
+  html+='</div></div>';
+
+  // Interest section
+  html+='<div class="modal-section"><h3>MJZP Interest</h3><div class="modal-grid">';
+  if(w.wi>0) html+=`<div><div class="mg-label">Working Interest</div><div class="mg-value" style="color:#4a9eff">${w.wi.toFixed(5)}%</div></div>`;
+  if(w.ri>0) html+=`<div><div class="mg-label">Revenue Interest</div><div class="mg-value" style="color:#4a9eff">${w.ri.toFixed(5)}%</div></div>`;
+  if(w.orri>0) html+=`<div><div class="mg-label">ORRI</div><div class="mg-value" style="color:#e8c547">${w.orri.toFixed(5)}%</div></div>`;
+  if(!w.wi&&!w.ri&&!w.orri) html+='<div><div class="mg-value" style="color:#5a6a7e">No active interest</div></div>';
+  html+='</div></div>';
+
+  // Economics section
+  if(ec){
+    html+='<div class="modal-section"><h3>Economics (TRC · Eff. 7/1/2025 · PV10 @ 10%)</h3><div class="modal-grid">';
+    html+=`<div><div class="mg-label">Reserve Category</div><div class="mg-value">${ec.cat}</div></div>`;
+    html+=`<div><div class="mg-label">PV10</div><div class="mg-value" style="color:#50c878;font-size:18px">$${ec.pv10.toFixed(2)}K</div></div>`;
+    html+=`<div><div class="mg-label">Undiscounted CF</div><div class="mg-value">$${ec.nd.toFixed(2)}K</div></div>`;
+    html+=`<div><div class="mg-label">Remaining Life</div><div class="mg-value">${ec.life.toFixed(1)} years</div></div>`;
+    if(ec.oil>0) html+=`<div><div class="mg-label">Net Oil Reserves</div><div class="mg-value">${ec.oil} Mbbl</div></div>`;
+    if(ec.gas>0) html+=`<div><div class="mg-label">Net Gas Reserves</div><div class="mg-value">${ec.gas} MMcf</div></div>`;
+    if(ec.oilRev>0) html+=`<div><div class="mg-label">Oil Revenue</div><div class="mg-value">$${ec.oilRev.toFixed(2)}K</div></div>`;
+    if(ec.gasRev>0) html+=`<div><div class="mg-label">Gas Revenue</div><div class="mg-value">$${ec.gasRev.toFixed(2)}K</div></div>`;
+    if(ec.misc>0) html+=`<div><div class="mg-label">Misc Revenue</div><div class="mg-value">$${ec.misc.toFixed(2)}K</div></div>`;
+    if(ec.exp>0) html+=`<div><div class="mg-label">Expense & Tax</div><div class="mg-value" style="color:#e94560">$${ec.exp.toFixed(2)}K</div></div>`;
+    html+='</div></div>';
+  } else {
+    html+='<div class="modal-section"><h3>Economics</h3><p style="color:#5a6a7e;font-size:13px">No reserve value in TRC report (zero production or shut-in with no forecast).</p></div>';
+  }
+
+  // Decline curve section (for wells we have data)
+  const dcData={
+    'Crawford 2-25':{product:'Gas Mcf',start:'9/1/2012',end:'12/9/2033',qi:'3,921',qf:'1,220',d:'0.0916',b:'1.823',dm:'0.0513'},
+    'Becki 1-36':{product:'Gas Mcf',start:'5/28/2007',end:'4/27/2041',qi:'22,093',qf:'999',d:'0.3890',b:'1.000',dm:'0.0619'},
+  };
+  const dc=dcData[w.name];
+  if(dc){
+    html+='<div class="modal-section"><h3>Decline Curve (Arps)</h3><div class="modal-grid">';
+    html+=`<div><div class="mg-label">Product</div><div class="mg-value">${dc.product}</div></div>`;
+    html+=`<div><div class="mg-label">Period</div><div class="mg-value">${dc.start} — ${dc.end}</div></div>`;
+    html+=`<div><div class="mg-label">Initial Rate (Qi)</div><div class="mg-value">${dc.qi}</div></div>`;
+    html+=`<div><div class="mg-label">Final Rate (Qf)</div><div class="mg-value">${dc.qf}</div></div>`;
+    html+=`<div><div class="mg-label">Nominal Decline (Di)</div><div class="mg-value">${dc.d}</div></div>`;
+    html+=`<div><div class="mg-label">b-factor</div><div class="mg-value">${dc.b}</div></div>`;
+    html+=`<div><div class="mg-label">Min Decline (Dm)</div><div class="mg-value">${dc.dm}</div></div>`;
+    html+='</div></div>';
+  }
+
+  // Links section
+  html+='<div class="modal-section"><h3>Links</h3><div style="display:flex;gap:12px;flex-wrap:wrap">';
+  if(e.api){
+    const apiClean=e.api.replace(/-/g,'');
+    html+=`<a href="https://fracfocusdata.org/DisclosureSearch/SearchResults?apiNumber=${apiClean}" target="_blank" style="color:#4a9eff;font-size:13px">🔗 FracFocus</a>`;
+  }
+  html+=`<a href="https://www.google.com/search?q=${encodeURIComponent(w.name+' '+w.loc+' well')}" target="_blank" style="color:#4a9eff;font-size:13px">🔍 Google Search</a>`;
+  html+='</div></div>';
+
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('well-modal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+
+function closeWellModal(){
+  document.getElementById('well-modal').style.display='none';
+  document.body.style.overflow='';
+}
+document.getElementById('well-modal').addEventListener('click',function(e){
+  if(e.target===this) closeWellModal();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape') closeWellModal();
+});
 
 // Map
 let map=null;
