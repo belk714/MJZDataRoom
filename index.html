@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MJZ Petroleum — Virtual Data Room</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a0e17;color:#d0d0d0;line-height:1.6}
+a{color:#4a9eff;text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0d1520 0%,#1a2332 100%);border-bottom:1px solid #1e2a3a;padding:30px 0;text-align:center}
+.header h1{font-size:28px;color:#e8c547;letter-spacing:2px;font-weight:700}
+.header .subtitle{color:#7a8a9e;font-size:14px;margin-top:6px;letter-spacing:1px}
+.header .confidential{display:inline-block;margin-top:12px;padding:4px 14px;border:1px solid #e94560;color:#e94560;font-size:11px;letter-spacing:2px;border-radius:3px;text-transform:uppercase}
+
+/* Nav */
+.nav{background:#0d1218;border-bottom:1px solid #1e2a3a;padding:0 20px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+.nav a{display:inline-block;padding:14px 18px;color:#7a8a9e;font-size:13px;font-weight:600;border-bottom:2px solid transparent;transition:all .2s}
+.nav a:hover,.nav a.active{color:#e8c547;border-bottom-color:#e8c547;text-decoration:none}
+
+/* Main */
+.container{max-width:1100px;margin:0 auto;padding:30px 20px}
+.section{display:none}
+.section.active{display:block}
+
+/* Cards */
+.card{background:#111827;border:1px solid #1e2a3a;border-radius:8px;padding:24px;margin-bottom:20px}
+.card h2{color:#e8c547;font-size:18px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #1e2a3a}
+.card h3{color:#8bb4e0;font-size:15px;margin:16px 0 10px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat{background:#0d1520;border:1px solid #1e2a3a;border-radius:8px;padding:16px;text-align:center}
+.stat .label{font-size:11px;color:#7a8a9e;text-transform:uppercase;letter-spacing:1px}
+.stat .value{font-size:24px;font-weight:700;color:#e8c547;margin-top:4px}
+.stat .sub{font-size:12px;color:#5a6a7e;margin-top:2px}
+
+/* Tables */
+.table-wrap{overflow-x:auto;border:1px solid #1e2a3a;border-radius:6px;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#0d1520;color:#7a8a9e;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;text-align:left;position:sticky;top:0;border-bottom:1px solid #1e2a3a}
+td{padding:8px 12px;border-bottom:1px solid #0f1520;color:#c0c8d0}
+tr:hover td{background:#0d1520}
+.field-header{background:#0d1520;font-weight:700;color:#e8c547;font-size:13px}
+.field-header td{padding:12px;border-bottom:2px solid #1e2a3a}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'SF Mono',Consolas,monospace;font-size:12px}
+td.pct{color:#4a9eff}
+
+/* Minerals */
+.mineral-card{background:#0d1520;border:1px solid #1e2a3a;border-radius:6px;padding:16px;margin:10px 0}
+.mineral-card .county{color:#e8c547;font-weight:600;font-size:14px}
+.mineral-card .state{color:#7a8a9e;font-size:12px}
+.mineral-card .desc{color:#b0b8c0;font-size:13px;margin-top:8px}
+
+/* Field filter */
+.field-filter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.field-btn{padding:6px 14px;font-size:12px;border-radius:4px;border:1px solid #1e2a3a;background:transparent;color:#7a8a9e;cursor:pointer;transition:all .2s}
+.field-btn:hover,.field-btn.active{background:#e8c547;color:#0a0e17;border-color:#e8c547}
+
+/* Download */
+.dl-list{list-style:none}
+.dl-list li{padding:12px 16px;border:1px solid #1e2a3a;border-radius:6px;margin:8px 0;display:flex;align-items:center;gap:12px;background:#0d1520;transition:border-color .2s}
+.dl-list li:hover{border-color:#4a9eff}
+.dl-icon{font-size:24px}
+.dl-info .name{font-weight:600;color:#e0e0e0;font-size:14px}
+.dl-info .meta{font-size:12px;color:#5a6a7e}
+
+/* Access gate */
+.gate{position:fixed;inset:0;background:#0a0e17;z-index:9999;display:flex;align-items:center;justify-content:center}
+.gate.hidden{display:none}
+.gate-box{text-align:center;max-width:400px;padding:40px}
+.gate-box h1{color:#e8c547;font-size:24px;margin-bottom:8px}
+.gate-box p{color:#7a8a9e;font-size:14px;margin-bottom:24px}
+.gate-box input{width:100%;padding:12px 16px;background:#111827;border:1px solid #1e2a3a;border-radius:6px;color:#e0e0e0;font-size:16px;text-align:center;letter-spacing:4px;outline:none}
+.gate-box input:focus{border-color:#e8c547}
+.gate-box button{margin-top:16px;padding:12px 40px;background:#e8c547;color:#0a0e17;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:1px}
+.gate-box button:hover{background:#d4b13e}
+.gate-box .error{color:#e94560;font-size:13px;margin-top:12px;display:none}
+
+@media(max-width:768px){
+  .header h1{font-size:20px}
+  .stats{grid-template-columns:1fr 1fr}
+  .stat .value{font-size:20px}
+  .nav a{padding:12px 14px;font-size:12px}
+  .container{padding:20px 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Access Gate -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <h1>MJZ Petroleum</h1>
+    <p>Virtual Data Room — Confidential</p>
+    <input type="password" id="pin-input" placeholder="Enter Access Code" maxlength="10" autocomplete="off">
+    <button onclick="checkAccess()">Enter</button>
+    <div class="error" id="gate-error">Invalid access code</div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header" id="app" style="display:none">
+  <h1>MJZ PETROLEUM</h1>
+  <div class="subtitle">Virtual Data Room</div>
+  <div class="confidential">Confidential — For Authorized Recipients Only</div>
+</div>
+
+<div class="nav" id="nav" style="display:none">
+  <a href="#" class="active" data-tab="overview">Overview</a>
+  <a href="#" data-tab="working">Working Interests</a>
+  <a href="#" data-tab="royalty">Royalty & ORRI</a>
+  <a href="#" data-tab="minerals">Mineral Interests</a>
+  <a href="#" data-tab="activity">Development Activity</a>
+  <a href="#" data-tab="documents">Documents</a>
+</div>
+
+<div class="container" id="content" style="display:none">
+
+<!-- OVERVIEW -->
+<div class="section active" id="tab-overview">
+  <div class="stats">
+    <div class="stat"><div class="label">Total Wells</div><div class="value">76</div><div class="sub">Across 7 fields</div></div>
+    <div class="stat"><div class="label">States</div><div class="value">3</div><div class="sub">Texas, Oklahoma, Missouri</div></div>
+    <div class="stat"><div class="label">Mineral Acres</div><div class="value">~6,246</div><div class="sub">Non-producing</div></div>
+    <div class="stat"><div class="label">Fields</div><div class="value">7</div><div class="sub">Active & development</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Company Overview</h2>
+    <p>MJZ Petroleum (MJZP) is a small independent oil and gas company owning non-operated working interests, royalty interests, and undrilled mineral interests primarily in Texas and Oklahoma, with additional mineral interests in Missouri.</p>
+    <h3>Asset Summary</h3>
+    <ul style="padding-left:20px;margin-top:8px">
+      <li><strong>Non-Operated Working Interests</strong> — Texas & Oklahoma</li>
+      <li><strong>Overriding Royalty Interests</strong> — Texas & Oklahoma</li>
+      <li><strong>~6,246 Acres</strong> of non-producing mineral interests — Texas, Oklahoma & Missouri</li>
+    </ul>
+    <h3>Sale Terms</h3>
+    <p style="margin-top:8px">It is MJZ Petroleum's intent to sell all interests. A <strong>full portfolio sale is preferred</strong>, but package offers will be considered. The interest list includes all of MJZP's interests except for proposed locations and unleased minerals.</p>
+  </div>
+
+  <div class="card">
+    <h2>Field Summary</h2>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Field</th><th>Location</th><th>Wells</th><th>Primary Interest</th></tr>
+        <tr><td>W. Cheyenne</td><td>Roger Mills Co., OK</td><td>20</td><td>WI + RI</td></tr>
+        <tr><td>Dempsey-Mantooth</td><td>Roger Mills Co., OK</td><td>5</td><td>ORRI + WI</td></tr>
+        <tr><td>Tuttle</td><td>Grady Co., OK</td><td>4</td><td>WI + RI</td></tr>
+        <tr><td>Glenwood</td><td>Upshur Co., TX</td><td>30</td><td>WI + RI + ORRI</td></tr>
+        <tr><td>Longview N.</td><td>Upshur Co., TX</td><td>1</td><td>ORRI</td></tr>
+        <tr><td>Deroan</td><td>Dawson Co., TX</td><td>12</td><td>ORRI + WI</td></tr>
+        <tr><td>Patricia</td><td>Dawson Co., TX</td><td>1</td><td>ORRI</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Key Highlights</h2>
+    <ul style="padding-left:20px">
+      <li><strong>Active Development — Cheyenne Field:</strong> Upland Energy has filed location requests with the OCC for increased density and horizontal wells across Sections 25, 30, 31, and 36 (14N 25W) in Cherokee formations.</li>
+      <li><strong>Tuttle Field Offset:</strong> A horizontal well has been requested offsetting MJZP interests across Sec. 14, 23, and 26 (10N 6W). MJZP holds interests in Sec. 24.</li>
+      <li><strong>Glenwood Field Farm-Out:</strong> MJZP has farmed out Cotton Valley interests, retaining shallow rights in producing sections and deep rights 100' below drilled depth. ORRI with WI conversion option at payout on new wells.</li>
+      <li><strong>Audit Underway:</strong> Falconer Energy is conducting an audit of select Glenwood Field wells.</li>
+      <li><strong>Dawson County ORRIs:</strong> Personally owned ORRIs may additionally be included in the sale.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- WORKING INTERESTS -->
+<div class="section" id="tab-working">
+  <div class="card">
+    <h2>Working Interest Schedule</h2>
+    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Non-operated working interest positions across all fields. WI = Working Interest, RI = Revenue Interest.</p>
+    <div class="field-filter" id="wi-filter">
+      <button class="field-btn active" data-field="all">All Fields</button>
+      <button class="field-btn" data-field="cheyenne">W. Cheyenne</button>
+      <button class="field-btn" data-field="dempsey">Dempsey-Mantooth</button>
+      <button class="field-btn" data-field="tuttle">Tuttle</button>
+      <button class="field-btn" data-field="glenwood">Glenwood</button>
+      <button class="field-btn" data-field="deroan">Deroan</button>
+    </div>
+    <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+      <table id="wi-table">
+        <tr><th>Well Name</th><th>WI %</th><th>RI %</th><th>NRI %</th></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ROYALTY & ORRI -->
+<div class="section" id="tab-royalty">
+  <div class="card">
+    <h2>Royalty & Overriding Royalty Interests</h2>
+    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">ORRI positions across fields. These are non-cost-bearing revenue interests.</p>
+    <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+      <table id="orri-table">
+        <tr><th>Well Name</th><th>Field</th><th>ORRI %</th></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MINERAL INTERESTS -->
+<div class="section" id="tab-minerals">
+  <div class="card">
+    <h2>Non-Producing Mineral Interests — ~6,246 Acres</h2>
+    <p style="margin-bottom:16px;color:#7a8a9e;font-size:13px">Unleased mineral interests across Texas, Oklahoma, and Missouri.</p>
+
+    <div class="mineral-card">
+      <div class="county">Bailey County, Texas</div>
+      <div class="state">Deed Recorded 6/17/59, Vol. 78, pp. 387-388</div>
+      <div class="desc">N½ and SE¼ of Section 18; SW¼ of Section 19, Block "B", Original Grantors Melvin Blum and Blum</div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Bailey County, Texas</div>
+      <div class="state">Deed Recorded 6/17/59, Vol. 78, pp. 386-387</div>
+      <div class="desc">SE¼ of Section 21; W½ of Section 37; SW¼ of Section 44, Block "B", Original Grantors Melvin Blum and Blum</div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Bailey & Lamb Counties, Texas</div>
+      <div class="state">Deed Recorded Bailey Co. 6/17/59, Vol. 78, pp. 384-385; Lamb Co. 9/29/59, Vol. 208, p. 30</div>
+      <div class="desc">All of League 206, Ochiltree County School Land — approximately <strong>4,428 acres</strong></div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Montgomery County, Texas</div>
+      <div class="state">Deed Recorded 7/13/59, Vol. 464, pp. 328-329</div>
+      <div class="desc">98 acres out of the George Reynolds Survey, described by metes and bounds in deed from Jason Williamson to G.W. Cooper (11/12/1918)</div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Walker County, Texas</div>
+      <div class="state">Deed Recorded 6/15/59, Vol. 164, p. 127</div>
+      <div class="desc">70.59 acres + 89.43 acres (~160 acres total), J.H. Garrett 160 Acre Survey. All oil, gas, petroleum, coal and other minerals.</div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Phelps County, Missouri</div>
+      <div class="state">Deed Recorded 6/15/59, Book 148, p. 393</div>
+      <div class="desc">S½ of Lots 1 & 2 of NW¼ and N½ of Lots 1 & 2 of SW¼, Section 19, Township 36, Range 6 — approximately <strong>150 acres</strong></div>
+    </div>
+
+    <div class="mineral-card">
+      <div class="county">Jackson County, Oklahoma</div>
+      <div class="state">Deed dated 3/28/59, recorded Book 173, pp. 77-78</div>
+      <div class="desc">E½ of SE¼, NW¼ of SE¼, and Lot 5, Section 11, T2S, R20W, Indian Meridian — approximately <strong>155 acres</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- DEVELOPMENT ACTIVITY -->
+<div class="section" id="tab-activity">
+  <div class="card">
+    <h2>Active Development & Pending Activity</h2>
+
+    <h3>🔵 Cheyenne Field — Upland Energy (Roger Mills Co., OK)</h3>
+    <p style="margin:8px 0">Two location requests filed with the OCC for sections where MJZP holds interests:</p>
+    <ul style="padding-left:20px;margin:8px 0">
+      <li><strong>Sec. 25 (14N 25W)</strong> — Granted: increased density well (Upper Cherokee)</li>
+      <li><strong>Sec. 30 & 31 (14N 25W)</strong> — Requested: increased density wells (Upper Cherokee)</li>
+      <li><strong>Sec. 30 & 31</strong> — Requested: horizontal well across sections (Upper & Lower Cherokee)</li>
+      <li><strong>Sec. 25 & 36</strong> — Requested: horizontal well across sections (Upper Cherokee)</li>
+    </ul>
+
+    <h3>🔵 Tuttle Field — Offset Activity (Grady Co., OK)</h3>
+    <p style="margin:8px 0">Location request filed with OCC for a horizontal well offsetting MJZP interests across Sec. 14, 23, and 26 (10N 6W). MJZP holds interest in Sec. 24 (10N 6W). One horizontal well currently producing in the section.</p>
+
+    <h3>🟡 Glenwood Field — Farm-Out & Retained Rights (Upshur Co., TX)</h3>
+    <p style="margin:8px 0">MJZP has farmed out Cotton Valley Formation interests. Retained:</p>
+    <ul style="padding-left:20px;margin:8px 0">
+      <li>Shallow rights in producing sections</li>
+      <li>Deep rights 100' below drilled depth</li>
+      <li>ORRI on any new wells with <strong>option to convert to WI at payout</strong></li>
+    </ul>
+    <p>Shallow wells drilled on Lester Unit (none currently producing). One additional shallow well staked but not yet drilled.</p>
+
+    <h3>🟠 Glenwood Field — Audit</h3>
+    <p style="margin:8px 0">Falconer Energy is currently conducting an audit of select wells in Glenwood Field.</p>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div class="section" id="tab-documents">
+  <div class="card">
+    <h2>Documents</h2>
+    <ul class="dl-list">
+      <li>
+        <span class="dl-icon">📊</span>
+        <div class="dl-info">
+          <div class="name">MJZP Interest Schedule</div>
+          <div class="meta">Ownership assignments — all wells by field, WI/RI/ORRI fractions</div>
+        </div>
+      </li>
+      <li>
+        <span class="dl-icon">📄</span>
+        <div class="dl-info">
+          <div class="name">Mineral Interests — Exhibit A</div>
+          <div class="meta">Legal descriptions of unleased mineral interests (TX, OK, MO)</div>
+        </div>
+      </li>
+    </ul>
+    <p style="margin-top:16px;color:#7a8a9e;font-size:13px">For document downloads, please contact MJZ Petroleum directly.</p>
+  </div>
+</div>
+
+</div>
+
+<div style="text-align:center;padding:30px;color:#3a4a5e;font-size:11px;border-top:1px solid #1e2a3a;margin-top:40px" id="footer" style="display:none">
+  MJZ Petroleum — Virtual Data Room — Confidential
+</div>
+
+<script>
+// Well data
+const wells=[
+// W. Cheyenne Field, Roger Mills Co. Okla.
+{name:'Crawford 2-25',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.27236,ri:0.21517,orri:0},
+{name:'Tracy - Croton 4-32',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+{name:'Becki 1-36',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40690,orri:0},
+{name:'Charlie Winn 1-30 Atoka',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.13113,ri:0.09835,orri:0.00013},
+{name:'Charlie Winn 1-30 Cherokee',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.26062,ri:0.20368,orri:0},
+{name:'Crawford 1-25',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0,ri:0,orri:0},
+{name:'Croton 1-32',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+{name:'Helen 1-31',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.51272,ri:0.46211,orri:0},
+{name:'Summer 1-31',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.51272,ri:0.40073,orri:0},
+{name:'Summer 2-31',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.51272,ri:0.40073,orri:0},
+{name:'Tracy - Croton 1-32 Cherokee',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52084,ri:0.40793,orri:0},
+{name:'Tracy - Croton 1-32 Morrow',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+{name:'Tracy - Croton 2-32',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+{name:'Tracy - Croton 3-32',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+{name:'Tracy 1-25',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.32550,ri:0.25565,orri:0},
+{name:'Tracy 1-30',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.26061,ri:0.20366,orri:0},
+{name:'Tracy 1-31',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.51272,ri:0.40073,orri:0},
+{name:'Tracy 1-36',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40690,orri:0},
+{name:'Tracy 2-31',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.51271,ri:0.40073,orri:0},
+{name:'Tracy 2-36',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40690,orri:0},
+{name:'Tracy Trust',field:'W. Cheyenne',loc:'Roger Mills Co., OK',key:'cheyenne',wi:0.52083,ri:0.40792,orri:0},
+// Dempsey-Mantooth
+{name:'Harrison 1-30',field:'Dempsey-Mantooth',loc:'Roger Mills Co., OK',key:'dempsey',wi:0,ri:0,orri:0.92166},
+{name:'Harrison 2-30',field:'Dempsey-Mantooth',loc:'Roger Mills Co., OK',key:'dempsey',wi:0,ri:0,orri:0.92166},
+{name:'Harrison C 1-30',field:'Dempsey-Mantooth',loc:'Roger Mills Co., OK',key:'dempsey',wi:0.74430,ri:0.56460,orri:0},
+{name:'Harrison D 1-30',field:'Dempsey-Mantooth',loc:'Roger Mills Co., OK',key:'dempsey',wi:0,ri:0,orri:0.74855},
+{name:'Louthan 1-19',field:'Dempsey-Mantooth',loc:'Roger Mills Co., OK',key:'dempsey',wi:0.27215,ri:0.02307,orri:0},
+// Tuttle
+{name:'Braum 24-1',field:'Tuttle',loc:'Grady Co., OK',key:'tuttle',wi:100.0,ri:78.0,orri:0},
+{name:'Braum 24-2',field:'Tuttle',loc:'Grady Co., OK',key:'tuttle',wi:1.06346,ri:0.82789,orri:0},
+{name:'Jackson 1xh Sec 24',field:'Tuttle',loc:'Grady Co., OK',key:'tuttle',wi:0.50000,ri:0.39000,orri:0},
+{name:'Skaggs 24-1',field:'Tuttle',loc:'Grady Co., OK',key:'tuttle',wi:100.0,ri:78.0,orri:0},
+// Longview N.
+{name:'Lancaster Maurine GU 1',field:'Longview N.',loc:'Upshur Co., TX',key:'longview',wi:0,ri:0,orri:0.59400},
+// Deroan
+{name:'Dugger 1',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0.70000},
+{name:'Grissom',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0},
+{name:'Jeter A-1',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0.57599},
+{name:'Jeter A-1 (MJZP)',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0.57599},
+{name:'Love',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:1.00000},
+{name:'Love A-1',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:1.17027},
+{name:'Love A-1 (MJZP)',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:1.44033,ri:1.17030,orri:0},
+{name:'Nowell',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0},
+{name:'Nowell A',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0.66667},
+{name:'Stricklin 1',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:3.00000},
+{name:'Stricklin 2',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:3.00000},
+{name:'Taylor',field:'Deroan',loc:'Dawson Co., TX',key:'deroan',wi:0,ri:0,orri:0},
+// Glenwood
+{name:'BRAWLEY 01',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:1.14652},
+{name:'BRAWLEY 05',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77020,ri:2.99400,orri:0},
+{name:'BRAWLEY 11',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:1.14652},
+{name:'BRAWLEY 13',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77020,ri:2.99400,orri:0},
+{name:'BRAWLEY 2',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77000,ri:2.99400,orri:0},
+{name:'BRAWLEY 3',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77000,ri:2.99400,orri:0},
+{name:'BRAWLEY 4',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:1.14652},
+{name:'BRAWLEY 7',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77000,ri:2.99400,orri:0},
+{name:'BRAWLEY 8',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:1.14652},
+{name:'BRAWLEY 9',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:3.77000,ri:2.99400,orri:0},
+{name:'LESTER ET AL 1',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:6.37000},
+{name:'LESTER, J.W. GU 04',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:6.36788},
+{name:'LESTER, J.W. GU 2',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:6.36788},
+{name:'LESTER, J.W. GU 3',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:6.37000},
+{name:'NICHOLSON JW GU 1',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70388,ri:3.68959,orri:0},
+{name:'NICHOLSON JW GU 2',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70388,ri:3.69305,orri:0},
+{name:'NICHOLSON JW GU 3',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70000,ri:3.69000,orri:0},
+{name:'NICHOLSON JW GU 4',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70388,ri:3.52791,orri:0.16168},
+{name:'NICHOLSON JW GU 5',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70000,ri:3.52500,orri:0.16500},
+{name:'NICHOLSON JW GU 6',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70000,ri:3.69000,orri:0},
+{name:'NICHOLSON JW GU 7',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:1.08940},
+{name:'NICHOLSON JW GU 8',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70000,ri:3.69000,orri:0},
+{name:'NICHOLSON JW GU 9',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:4.70000,ri:3.68959,orri:0},
+{name:'S. BRAWLEY GU 01',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22000,ri:12.16500,orri:0.16500},
+{name:'S. BRAWLEY GU 2',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22000,ri:12.16500,orri:0.16500},
+{name:'S. BRAWLEY GU 3',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22000,ri:12.16500,orri:0.16500},
+{name:'S. BRAWLEY GU 4',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22000,ri:12.32760,orri:0},
+{name:'S. BRAWLEY GU 5',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22000,ri:12.32780,orri:0},
+{name:'S. BRAWLEY GU 6',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:3.33705},
+{name:'S. BRAWLEY GU 7',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:3.33705},
+{name:'S. BRAWLEY GU 8',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:3.37050},
+{name:'S. BRAWLEY GU 9',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:16.22490,ri:12.32760,orri:0},
+{name:'Willis FM Gas Unit #2',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0.02808,ri:0.02340,orri:0},
+{name:'Voss N0 1',field:'Glenwood',loc:'Upshur Co., TX',key:'glenwood',wi:0,ri:0,orri:3.05364},
+// Patricia
+{name:'Harris E W et al 13',field:'Patricia',loc:'Dawson Co., TX',key:'patricia',wi:0,ri:0,orri:1.06250},
+];
+
+// Access gate
+const ACCESS_CODE='7714';
+function checkAccess(){
+  const v=document.getElementById('pin-input').value;
+  if(v===ACCESS_CODE){
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('app').style.display='';
+    document.getElementById('nav').style.display='';
+    document.getElementById('content').style.display='';
+    sessionStorage.setItem('mjzp-auth','1');
+    buildTables();
+  } else {
+    document.getElementById('gate-error').style.display='block';
+  }
+}
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkAccess()});
+if(sessionStorage.getItem('mjzp-auth')==='1'){
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('app').style.display='';
+  document.getElementById('nav').style.display='';
+  document.getElementById('content').style.display='';
+  setTimeout(buildTables,0);
+}
+
+// Nav
+document.querySelectorAll('.nav a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    document.querySelectorAll('.nav a').forEach(n=>n.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('tab-'+a.dataset.tab).classList.add('active');
+  });
+});
+
+function pct(v){return v>0?(v).toFixed(4)+'%':'—'}
+
+function buildTables(){
+  // WI table
+  const wiT=document.getElementById('wi-table');
+  let currentField='';
+  const wiWells=wells.filter(w=>w.wi>0||w.ri>0);
+  wiWells.forEach(w=>{
+    if(w.field!==currentField){
+      currentField=w.field;
+      const fr=document.createElement('tr');
+      fr.className='field-header';
+      fr.dataset.field=w.key;
+      fr.innerHTML=`<td colspan="4">${w.field} — ${w.loc}</td>`;
+      wiT.appendChild(fr);
+    }
+    const tr=document.createElement('tr');
+    tr.dataset.field=w.key;
+    tr.innerHTML=`<td>${w.name}</td><td class="num pct">${pct(w.wi)}</td><td class="num pct">${pct(w.ri)}</td><td class="num">${w.ri>0?pct(w.ri):'—'}</td>`;
+    wiT.appendChild(tr);
+  });
+
+  // ORRI table
+  const orriT=document.getElementById('orri-table');
+  const orriWells=wells.filter(w=>w.orri>0);
+  orriWells.forEach(w=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${w.name}</td><td>${w.field}</td><td class="num pct">${pct(w.orri)}</td>`;
+    orriT.appendChild(tr);
+  });
+
+  // Field filter
+  document.querySelectorAll('#wi-filter .field-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#wi-filter .field-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const f=btn.dataset.field;
+      document.querySelectorAll('#wi-table tr[data-field]').forEach(tr=>{
+        tr.style.display=(f==='all'||tr.dataset.field===f)?'':'none';
+      });
+    });
+  });
+}
+</script>
+</body>
+</html>
