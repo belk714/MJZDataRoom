@@ -337,16 +337,13 @@ td.pct{color:#4a9eff}
   </div>
 
   <div class="card">
-    <h2>Decline Curve Parameters (Select Wells)</h2>
-    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Arps decline parameters from TRC engineering. Gas rates in Mcf/month.</p>
-    <div class="table-wrap">
-      <table>
-        <tr><th>Well</th><th>Product</th><th>Type</th><th>Start</th><th>End</th><th>Initial Rate</th><th>Final Rate</th><th>D / τ</th><th>b / n</th></tr>
-        <tr><td>Crawford 2-25</td><td>Gas</td><td>Arps</td><td>9/2012</td><td>12/2033</td><td class="num">3,921</td><td class="num">1,220</td><td class="num">0.0916</td><td class="num">1.823</td></tr>
-        <tr><td>Becki 1-36</td><td>Gas</td><td>Arps</td><td>5/2007</td><td>4/2041</td><td class="num">22,093</td><td class="num">999</td><td class="num">0.3890</td><td class="num">1.000</td></tr>
+    <h2>Well Engineering Detail</h2>
+    <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Operator, reservoir, and API data from TRC engineering reports.</p>
+    <div class="table-wrap" style="max-height:600px;overflow-y:auto">
+      <table id="eng-table">
+        <tr><th>Well</th><th>Operator</th><th>Reservoir</th><th>Phase</th><th>API #</th></tr>
       </table>
     </div>
-    <p style="margin-top:12px;color:#7a8a9e;font-size:12px">Full decline parameters available for all wells in the TRC Input Reports. Contact MJZ Petroleum for complete engineering files.</p>
   </div>
 </div>
 
@@ -579,6 +576,81 @@ const econ=[
 {name:'Harris E W et al 13',field:'Patricia',cat:'PV-PD',oil:0.04,gas:0,oilRev:2.81,gasRev:0,misc:0,exp:0,inv:0,nd:2.81,pv10:2.31,life:4.92},
 ];
 
+// Engineering detail (TRC Input Reports)
+const eng=[
+{name:'Crawford 2-25',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'35-129-22991'},
+{name:'Becki 1-36',op:'Mustang Fuel',res:'Upr Cherokee',phase:'Gas',api:'35-129-23104'},
+{name:'Charlie Winn 1-30 Atoka',op:'Mustang Fuel',res:'Morrow',phase:'Gas',api:'35-129-23148'},
+{name:'Charlie Winn 1-30 Cherokee',op:'Mustang Fuel',res:'Cherokee',phase:'Gas',api:'35-129-23148'},
+{name:'Croton 1-32',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'35-129-23249'},
+{name:'Summer 1-31',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'35-129-23071'},
+{name:'Summer 2-31',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'35-129-23165'},
+{name:'Tracy-Croton 1-32 Cherokee',op:'Mustang Fuel',res:'Cherokee',phase:'Gas',api:'35-129-20362'},
+{name:'Tracy-Croton 1-32 Morrow',op:'Mustang Fuel',res:'Morrow',phase:'Gas',api:'35-129-20362'},
+{name:'Tracy-Croton 2-32',op:'Mustang Fuel',res:'Morrow',phase:'Gas',api:'35-129-20515'},
+{name:'Tracy-Croton 3-32',op:'Mustang Fuel',res:'Morrow',phase:'Gas',api:'35-129-22809'},
+{name:'Tracy-Croton 4-32',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'35-129-23128'},
+{name:'Tracy 1-25',op:'Mustang Fuel',res:'Cherokee',phase:'Gas',api:'35-129-20337'},
+{name:'Tracy 1-30',op:'Mustang Fuel',res:'Upr Morrow',phase:'Gas',api:'35-129-20405'},
+{name:'Tracy 1-31',op:'Mustang Fuel',res:'Cherokee',phase:'Gas',api:'35-129-20247'},
+{name:'Tracy 1-36',op:'Mustang Fuel',res:'Cherokee',phase:'Gas',api:''},
+{name:'Tracy 2-31',op:'Mustang Fuel',res:'Upr Morrow',phase:'Gas',api:'35-129-20402'},
+{name:'Tracy 2-36',op:'Mustang Fuel',res:'Lwr Cherokee',phase:'Gas',api:'35-129-20499'},
+{name:'Tracy Trust',op:'Mustang Fuel',res:'Atoka',phase:'Gas',api:'42-459-30528'},
+{name:'Harrison 1-30',op:'—',res:'—',phase:'Oil',api:''},
+{name:'Harrison 2-30',op:'Kaiser-Francis',res:'—',phase:'Oil',api:''},
+{name:'Harrison C 1-30',op:'—',res:'—',phase:'Gas',api:''},
+{name:'Harrison D 1-30',op:'Daylight',res:'—',phase:'Oil',api:''},
+{name:'Louthan 1-19',op:'—',res:'—',phase:'Gas',api:''},
+{name:'Braum 24-2',op:'—',res:'—',phase:'Gas',api:''},
+{name:'Jackson 1xh Sec 24',op:'—',res:'—',phase:'Gas',api:''},
+{name:'Dugger 1',op:'—',res:'—',phase:'Oil',api:''},
+{name:'Jeter A-1',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Jeter A-1 (MJZP)',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Love',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Love A-1',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Love A-1 (MJZP)',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Nowell A',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Stricklin 1',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'Stricklin 2',op:'Cholla Petroleum',res:'Mississippian',phase:'Oil',api:''},
+{name:'BRAWLEY 01',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 05',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 11',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 13',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31364'},
+{name:'BRAWLEY 2',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 3',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 4',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 7',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'BRAWLEY 8',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:'42-459-31340'},
+{name:'BRAWLEY 9',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'LESTER ET AL 1',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'LESTER, J.W. GU 04',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:'42-459-31358'},
+{name:'LESTER, J.W. GU 2',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'LESTER, J.W. GU 3',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31263'},
+{name:'NICHOLSON JW GU 1',op:'Merit Energy',res:'Cotton Valley',phase:'Gas',api:'42-459-30642'},
+{name:'NICHOLSON JW GU 2',op:'Merit Energy',res:'Cotton Valley',phase:'Gas',api:'42-459-30851'},
+{name:'NICHOLSON JW GU 3',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-183-31312'},
+{name:'NICHOLSON JW GU 4',op:'Breitburn Operating',res:'Cotton Valley',phase:'Gas',api:'42-459-30957'},
+{name:'NICHOLSON JW GU 5',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'NICHOLSON JW GU 6',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31234'},
+{name:'NICHOLSON JW GU 7',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31362'},
+{name:'NICHOLSON JW GU 8',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31360'},
+{name:'NICHOLSON JW GU 9',op:'Quantum Resources',res:'Cotton Valley',phase:'Gas',api:'42-459-31249'},
+{name:'S. BRAWLEY GU 01',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 2',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 3',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 4',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 5',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 6',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 7',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 8',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'S. BRAWLEY GU 9',op:'—',res:'Cotton Valley',phase:'Gas',api:''},
+{name:'Willis FM Gas Unit #2',op:'Diversified',res:'Cotton Valley',phase:'Gas',api:'42-459-31057'},
+{name:'Voss N0 1',op:'The Long Trusts',res:'—',phase:'Gas',api:'42-459-30623'},
+{name:'Lancaster Maurine GU 1',op:'—',res:'—',phase:'Gas',api:''},
+{name:'Harris E W et al 13',op:'New Height Energy',res:'Spraberry',phase:'Oil',api:''},
+];
+
 // Map marker data with types and states
 const mapData={
   fields:[
@@ -734,6 +806,15 @@ function buildTables(){
     const pv=w.pv10>0?`<span style="color:#50c878">$${w.pv10.toFixed(2)}K</span>`:'—';
     tr.innerHTML=`<td>${w.name}</td><td style="font-size:11px;color:#7a8a9e">${w.cat}</td><td class="num">${w.oil||'—'}</td><td class="num">${w.gas||'—'}</td><td class="num">${w.oilRev?'$'+w.oilRev.toFixed(2)+'K':'—'}</td><td class="num">${w.gasRev?'$'+w.gasRev.toFixed(2)+'K':'—'}</td><td class="num">${w.exp?'$'+w.exp.toFixed(2)+'K':'—'}</td><td class="num">${w.nd?'$'+w.nd.toFixed(2)+'K':'—'}</td><td class="num">${pv}</td><td class="num">${w.life?w.life.toFixed(1):'—'}</td>`;
     econT.appendChild(tr);
+  });
+
+  // Engineering detail table
+  const engT=document.getElementById('eng-table');
+  eng.forEach(w=>{
+    const tr=document.createElement('tr');
+    const phaseColor=w.phase==='Gas'?'#4a9eff':'#50c878';
+    tr.innerHTML=`<td>${w.name}</td><td>${w.op}</td><td>${w.res}</td><td style="color:${phaseColor}">${w.phase}</td><td class="num">${w.api||'—'}</td>`;
+    engT.appendChild(tr);
   });
 
   document.querySelectorAll('#wi-filter .field-btn').forEach(btn=>{
