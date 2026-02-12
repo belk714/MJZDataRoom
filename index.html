@@ -922,24 +922,6 @@ function openWellModal(idx){
     html+='<div class="modal-section"><h3>Economics</h3><p style="color:#5a6a7e;font-size:13px">No reserve value in TRC report (zero production or shut-in with no forecast).</p></div>';
   }
 
-  // Decline curve section (for wells we have data)
-  const dcData={
-    'Crawford 2-25':{product:'Gas Mcf',start:'9/1/2012',end:'12/9/2033',qi:'3,921',qf:'1,220',d:'0.0916',b:'1.823',dm:'0.0513'},
-    'Becki 1-36':{product:'Gas Mcf',start:'5/28/2007',end:'4/27/2041',qi:'22,093',qf:'999',d:'0.3890',b:'1.000',dm:'0.0619'},
-  };
-  const dc=dcData[w.name];
-  if(dc){
-    html+='<div class="modal-section"><h3>Decline Curve (Arps)</h3><div class="modal-grid">';
-    html+=`<div><div class="mg-label">Product</div><div class="mg-value">${dc.product}</div></div>`;
-    html+=`<div><div class="mg-label">Period</div><div class="mg-value">${dc.start} — ${dc.end}</div></div>`;
-    html+=`<div><div class="mg-label">Initial Rate (Qi)</div><div class="mg-value">${dc.qi}</div></div>`;
-    html+=`<div><div class="mg-label">Final Rate (Qf)</div><div class="mg-value">${dc.qf}</div></div>`;
-    html+=`<div><div class="mg-label">Nominal Decline (Di)</div><div class="mg-value">${dc.d}</div></div>`;
-    html+=`<div><div class="mg-label">b-factor</div><div class="mg-value">${dc.b}</div></div>`;
-    html+=`<div><div class="mg-label">Min Decline (Dm)</div><div class="mg-value">${dc.dm}</div></div>`;
-    html+='</div></div>';
-  }
-
   // Links section
   html+='<div class="modal-section"><h3>Links</h3><div style="display:flex;gap:12px;flex-wrap:wrap">';
   if(e.api){
