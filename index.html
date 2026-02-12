@@ -965,7 +965,7 @@ function openWellModal(idx){
     'BRAWLEY 01':['098887','06','Gas'],'BRAWLEY 05':['224455','06','Gas'],'BRAWLEY 11':['231944','06','Gas'],
     'BRAWLEY 13':['232768','06','Gas'],'BRAWLEY 2':['169705','06','Gas'],'BRAWLEY 3':['186967','06','Gas'],
     'BRAWLEY 4':['221328','06','Gas'],'BRAWLEY 7':['227359','06','Gas'],'BRAWLEY 8':['227671','06','Gas'],
-    'BRAWLEY 9':['228345','06','Gas'],'NICHOLSON JW GU 1':['186948','06','Gas'],'NICHOLSON JW GU 2':['208896','06','Gas'],
+    'BRAWLEY 9':['228345','06','Gas'],
     'S. BRAWLEY GU 01':['105208','06','Gas'],'S. BRAWLEY GU 2':['159543','06','Gas'],'S. BRAWLEY GU 3':['160352','06','Gas'],
     'S. BRAWLEY GU 4':['170234','06','Gas'],'S. BRAWLEY GU 5':['175994','06','Gas'],'S. BRAWLEY GU 6':['213462','06','Gas'],
     'S. BRAWLEY GU 7':['213665','06','Gas'],'S. BRAWLEY GU 8':['232773','06','Gas'],'S. BRAWLEY GU 9':['235510','06','Gas'],
@@ -999,7 +999,8 @@ function openWellModal(idx){
       .then(r=>r.json()).then(d=>{
         const el=document.getElementById('prod-loading');
         if(!d.data||d.data.length===0){if(el)el.textContent='No production data available.';return;}
-        if(el)el.textContent=`${d.count} months · ${d.data[0].month} — ${d.data[d.data.length-1].month}`;
+        const fieldNm=d.data.find(r=>r.fieldName)?.fieldName||'';
+        if(el)el.textContent=`${fieldNm?fieldNm+' · ':''}${d.count} months · ${d.data[0].month} — ${d.data[d.data.length-1].month}`;
         const canvas=document.getElementById('prod-chart');
         if(!canvas)return;
         const ctx=canvas.getContext('2d');
