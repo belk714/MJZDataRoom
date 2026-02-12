@@ -255,6 +255,15 @@ tr.clickable:hover td{background:#1a2332 !important}
   <div class="card">
     <h2>Royalty & Overriding Royalty Interests</h2>
     <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">ORRI positions across fields. These are non-cost-bearing revenue interests.</p>
+    <div class="field-filter" id="orri-filter">
+      <button class="field-btn active" data-field="all">All Fields</button>
+      <button class="field-btn" data-field="cheyenne">W. Cheyenne</button>
+      <button class="field-btn" data-field="dempsey">Dempsey-Mantooth</button>
+      <button class="field-btn" data-field="glenwood">Glenwood</button>
+      <button class="field-btn" data-field="deroan">Deroan</button>
+      <button class="field-btn" data-field="longview">Longview N.</button>
+      <button class="field-btn" data-field="patricia">Patricia</button>
+    </div>
     <div class="table-wrap" style="max-height:600px;overflow-y:auto">
       <table id="orri-table">
         <tr><th>Well Name</th><th>Field</th><th>ORRI %</th></tr>
@@ -808,11 +817,33 @@ function buildTables(){
   });
 
   const orriT=document.getElementById('orri-table');
+  let orriField='';
   const orriWells=wells.filter(w=>w.orri>0);
   orriWells.forEach(w=>{
+    if(w.field!==orriField){
+      orriField=w.field;
+      const fr=document.createElement('tr');
+      fr.className='field-header';
+      fr.dataset.field=w.key;
+      fr.innerHTML=`<td colspan="3">${w.field} — ${w.loc}</td>`;
+      orriT.appendChild(fr);
+    }
     const tr=document.createElement('tr');
+    tr.dataset.field=w.key;
     tr.innerHTML=`<td>${w.name}</td><td>${w.field}</td><td class="num pct">${pct(w.orri)}</td>`;
     orriT.appendChild(tr);
+  });
+
+  // ORRI field filter
+  document.querySelectorAll('#orri-filter .field-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#orri-filter .field-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const f=btn.dataset.field;
+      document.querySelectorAll('#orri-table tr[data-field]').forEach(tr=>{
+        tr.style.display=(f==='all'||tr.dataset.field===f)?'':'none';
+      });
+    });
   });
 
   // Combined well schedule table
@@ -970,7 +1001,7 @@ function goTab(tab){
 function goTabField(tab,fieldKey){
   goTab(tab);
   // Find the right filter container
-  const filterIds={working:'wi-filter',economics:'econ-filter'};
+  const filterIds={working:'wi-filter',economics:'econ-filter',royalty:'orri-filter'};
   const filterId=filterIds[tab];
   if(!filterId||!fieldKey) return;
   const container=document.getElementById(filterId);
@@ -1032,7 +1063,7 @@ function buildFieldPopup(d){
   // Navigation links
   html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
   if(d.type==='wi') html+=`<a href="#" onclick="goTabField('working','${fieldKey}');return false" style="font-size:11px;color:#4a9eff">📋 Working Interests</a>`;
-  if(d.type==='orri') html+=`<a href="#" onclick="goTab('royalty');return false" style="font-size:11px;color:#4a9eff">📋 ORRI Detail</a>`;
+  if(d.type==='orri') html+=`<a href="#" onclick="goTabField('royalty','${fieldKey}');return false" style="font-size:11px;color:#4a9eff">📋 ORRI Detail</a>`;
   html+=`<a href="#" onclick="goTabField('economics','${fieldKey}');return false" style="font-size:11px;color:#50c878">💰 Economics</a>`;
   html+=`<a href="#" onclick="goTab('activity');return false" style="font-size:11px;color:#e94560">🔴 Activity</a>`;
   html+='</div>';
