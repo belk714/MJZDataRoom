@@ -960,6 +960,24 @@ function openWellModal(idx){
     html+='<div class="modal-section"><h3>Economics</h3><p style="color:#5a6a7e;font-size:13px">No reserve value in TRC report (zero production or shut-in with no forecast).</p></div>';
   }
 
+  // Production chart (fetched live from RRC via proxy)
+  const leaseMap={
+    'BRAWLEY 01':['098887','06','Gas'],'BRAWLEY 05':['224455','06','Gas'],'BRAWLEY 11':['231944','06','Gas'],
+    'BRAWLEY 13':['232768','06','Gas'],'BRAWLEY 2':['169705','06','Gas'],'BRAWLEY 3':['186967','06','Gas'],
+    'BRAWLEY 4':['221328','06','Gas'],'BRAWLEY 7':['227359','06','Gas'],'BRAWLEY 8':['227671','06','Gas'],
+    'BRAWLEY 9':['228345','06','Gas'],'NICHOLSON JW GU 1':['186948','06','Gas'],'NICHOLSON JW GU 2':['208896','06','Gas'],
+    'S. BRAWLEY GU 01':['105208','06','Gas'],'S. BRAWLEY GU 2':['159543','06','Gas'],'S. BRAWLEY GU 3':['160352','06','Gas'],
+    'S. BRAWLEY GU 4':['170234','06','Gas'],'S. BRAWLEY GU 5':['175994','06','Gas'],'S. BRAWLEY GU 6':['213462','06','Gas'],
+    'S. BRAWLEY GU 7':['213665','06','Gas'],'S. BRAWLEY GU 8':['232773','06','Gas'],'S. BRAWLEY GU 9':['235510','06','Gas'],
+  };
+  const lm=leaseMap[w.name];
+  if(lm){
+    html+='<div class="modal-section"><h3>Production History (RRC)</h3>';
+    html+=`<canvas id="prod-chart" width="640" height="200" style="width:100%;max-width:640px;background:#0d1520;border-radius:6px;border:1px solid #1e2a3a"></canvas>`;
+    html+='<div id="prod-loading" style="color:#7a8a9e;font-size:12px;margin-top:6px">Loading production data from RRC...</div>';
+    html+='</div>';
+  }
+
   // Links section
   html+='<div class="modal-section"><h3>Links</h3><div style="display:flex;gap:12px;flex-wrap:wrap">';
   if(e.api){
@@ -972,6 +990,63 @@ function openWellModal(idx){
   document.getElementById('modal-body').innerHTML=html;
   document.getElementById('well-modal').style.display='block';
   document.body.style.overflow='hidden';
+
+  // Fetch and render production chart
+  const lmCheck=leaseMap[w.name];
+  if(lmCheck){
+    const [lease,dist,wtype]=lmCheck;
+    fetch(`https://og-wells-pdq.belk714.workers.dev/production?lease=${lease}&district=${dist}&type=${wtype}&startYear=2020&endYear=2026`)
+      .then(r=>r.json()).then(d=>{
+        const el=document.getElementById('prod-loading');
+        if(!d.data||d.data.length===0){if(el)el.textContent='No production data available.';return;}
+        if(el)el.textContent=`${d.count} months · ${d.data[0].month} — ${d.data[d.data.length-1].month}`;
+        const canvas=document.getElementById('prod-chart');
+        if(!canvas)return;
+        const ctx=canvas.getContext('2d');
+        const W=canvas.width,H=canvas.height;
+        const key=wtype==='Gas'?'gasMCF':'oilBBL';
+        const unit=wtype==='Gas'?'MCF':'BBL';
+        const vals=d.data.map(r=>r[key]||0);
+        const months=d.data.map(r=>r.month);
+        const maxV=Math.max(...vals,1);
+        const barW=Math.max(2,W/vals.length-1);
+        const pad={t:20,b:30,l:50,r:10};
+        const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+
+        ctx.fillStyle='#0d1520';ctx.fillRect(0,0,W,H);
+        // Grid lines
+        ctx.strokeStyle='#1e2a3a';ctx.lineWidth=0.5;
+        for(let i=0;i<=4;i++){
+          const y=pad.t+cH*(1-i/4);
+          ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();
+          ctx.fillStyle='#5a6a7e';ctx.font='9px sans-serif';ctx.textAlign='right';
+          ctx.fillText(Math.round(maxV*i/4).toLocaleString(),pad.l-4,y+3);
+        }
+        // Bars
+        const bw=cW/vals.length;
+        vals.forEach((v,i)=>{
+          const x=pad.l+i*bw;
+          const h=(v/maxV)*cH;
+          const color=v>0?'#4a9eff':'transparent';
+          ctx.fillStyle=color;
+          ctx.fillRect(x,pad.t+cH-h,Math.max(1,bw-1),h);
+        });
+        // X-axis labels (every 12 months)
+        ctx.fillStyle='#5a6a7e';ctx.font='9px sans-serif';ctx.textAlign='center';
+        months.forEach((m,i)=>{
+          if(i%12===0){
+            const x=pad.l+i*bw+bw/2;
+            ctx.fillText(m.split(' ')[1]||m,x,H-5);
+          }
+        });
+        // Title
+        ctx.fillStyle='#7a8a9e';ctx.font='10px sans-serif';ctx.textAlign='left';
+        ctx.fillText(`${unit}/month`,pad.l,pad.t-6);
+      }).catch(()=>{
+        const el=document.getElementById('prod-loading');
+        if(el)el.textContent='Could not load production data.';
+      });
+  }
 }
 
 function closeWellModal(){
