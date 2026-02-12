@@ -93,7 +93,7 @@ td.pct{color:#4a9eff}
 .leaflet-popup-content strong{color:#e8c547}
 .leaflet-popup-content .pop-field{color:#8bb4e0;font-size:12px}
 .leaflet-popup-content .pop-detail{color:#7a8a9e;font-size:12px;margin-top:4px}
-.leaflet-tile{filter:brightness(0.7) contrast(1.1) saturate(0.3)}
+.leaflet-tile{}
 
 @media(max-width:768px){
   .header h1{font-size:20px}
@@ -561,7 +561,7 @@ function initMap(){
   if(mapInit)return;
   mapInit=true;
   const map=L.map('asset-map').setView([34.5,-99],5);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
     attribution:'©OpenStreetMap ©CARTO',maxZoom:18
   }).addTo(map);
 
