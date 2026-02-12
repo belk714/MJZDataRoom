@@ -966,6 +966,20 @@ function goTab(tab){
   window.scrollTo(0,0);
 }
 
+// Navigate to tab AND activate field filter
+function goTabField(tab,fieldKey){
+  goTab(tab);
+  // Find the right filter container
+  const filterIds={working:'wi-filter',economics:'econ-filter'};
+  const filterId=filterIds[tab];
+  if(!filterId||!fieldKey) return;
+  const container=document.getElementById(filterId);
+  if(!container) return;
+  // Click the matching field button
+  const btn=container.querySelector(`.field-btn[data-field="${fieldKey}"]`);
+  if(btn) btn.click();
+}
+
 // Helper: get field economics summary
 function fieldEconSummary(fieldKey){
   const fieldMap={'cheyenne':'Cheyenne','dempsey':'Dempsey-Mantooth','tuttle':'Tuttle','glenwood':'Glenwood','deroan':'Deroan','patricia':'Patricia','longview':'Longview N.'};
@@ -1017,9 +1031,9 @@ function buildFieldPopup(d){
   html+=fieldEconSummary(fieldKey);
   // Navigation links
   html+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">';
-  if(d.type==='wi') html+=`<a href="#" onclick="goTab('working');return false" style="font-size:11px;color:#4a9eff">📋 Working Interests</a>`;
+  if(d.type==='wi') html+=`<a href="#" onclick="goTabField('working','${fieldKey}');return false" style="font-size:11px;color:#4a9eff">📋 Working Interests</a>`;
   if(d.type==='orri') html+=`<a href="#" onclick="goTab('royalty');return false" style="font-size:11px;color:#4a9eff">📋 ORRI Detail</a>`;
-  html+=`<a href="#" onclick="goTab('economics');return false" style="font-size:11px;color:#50c878">💰 Economics</a>`;
+  html+=`<a href="#" onclick="goTabField('economics','${fieldKey}');return false" style="font-size:11px;color:#50c878">💰 Economics</a>`;
   html+=`<a href="#" onclick="goTab('activity');return false" style="font-size:11px;color:#e94560">🔴 Activity</a>`;
   html+='</div>';
   return html;
