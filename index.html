@@ -350,7 +350,7 @@ tr.clickable:hover td{background:#1a2332 !important}
   </div>
 
   <div class="card">
-    <h2>Complete Well Schedule</h2>
+    <h2 style="display:flex;justify-content:space-between;align-items:center">Complete Well Schedule <button onclick="downloadCSV()" style="font-size:13px;padding:6px 14px;border-radius:6px;border:1px solid #2a3a4e;background:#1a2332;color:#4a9eff;cursor:pointer">📥 Download CSV</button></h2>
     <p style="margin-bottom:12px;color:#7a8a9e;font-size:13px">Click any well for detailed single-well view. Interest types: <span style="color:#4a9eff">■</span> WI <span style="color:#e8c547">■</span> ORRI <span style="color:#50c878">■</span> Both</p>
     <div class="field-filter" id="econ-filter">
       <button class="field-btn active" data-field="all">All Fields</button>
@@ -803,6 +803,22 @@ document.querySelectorAll('.nav a').forEach(a=>{
 });
 
 function pct(v){return v>0?(v).toFixed(4)+'%':'—'}
+
+function downloadCSV(){
+  const headers=['Well','Field','Location','Interest Type','WI %','RI %','ORRI %','Operator','Reservoir','Phase','API','PV10 (M$)','Life (yrs)'];
+  const rows=wells.map(w=>{
+    const e=eng.find(x=>x.name===w.name)||{};
+    const ec=econ.find(x=>x.name===w.name)||{};
+    const iType=w.wi>0&&w.orri>0?'WI+ORRI':w.wi>0?'WI':'ORRI';
+    return [w.name,w.field,w.loc,iType,w.wi,w.ri,w.orri,e.op||'',e.res||'',e.phase||'',e.api||'',ec.pv10||'',ec.life||''].map(v=>`"${v}"`).join(',');
+  });
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='MJZP_Well_Schedule.csv';
+  a.click();
+}
 
 function buildTables(){
   const wiT=document.getElementById('wi-table');
