@@ -975,6 +975,7 @@ function openWellModal(idx){
   const lm=leaseMap[w.name];
   if(lm){
     html+='<div class="modal-section"><h3>Production History (RRC)</h3>';
+    html+='<p style="color:#e8c547;font-size:11px;margin-bottom:8px;line-height:1.4">⚠️ Source: Texas RRC public records. Production shown is total lease production and may include zones not covered by MJZP interests.</p>';
     html+=`<canvas id="prod-chart" width="640" height="200" style="width:100%;max-width:640px;background:#0d1520;border-radius:6px;border:1px solid #1e2a3a"></canvas>`;
     html+='<div id="prod-loading" style="color:#7a8a9e;font-size:12px;margin-top:6px">Loading production data from RRC...</div>';
     html+='</div>';
